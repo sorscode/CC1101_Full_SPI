@@ -10,7 +10,7 @@ I don't take full credit for this project, as I have just taken other peoples wo
 - Arduino code to get everything running
 - Full SPI Support
 
-## Features:
+## Future:
 - Compatibility
 - Multiple CC11xx modules (Maybe)
 
