@@ -6,6 +6,7 @@ CC1101 cc1101;
 
 const int dataReadyPin = 2;
 const int chipSelectPin = 10;
+const int triggerPin = 16;
 
 // Global variable to trigger GDO0 activity
 volatile bool trigger = false;
@@ -20,31 +21,41 @@ void send_data(void);
 
 void setup() {
   Serial.begin(9600);
+  pinMode(triggerPin, OUTPUT);
+  digitalWrite(triggerPin, 0);
   delay(1000);
+  digitalWrite(triggerPin, 1);
   SPI.begin();
   pinMode(dataReadyPin, INPUT);
   pinMode(chipSelectPin, OUTPUT);
-  cc1101.init(); 
+  
+  //digitalWrite(triggerPin, 0);
+  //delay(500);
+  //digitalWrite(triggerPin, 1);
+  cc1101.init();
   cc1101_config();
   cc1101_registerDump();
   // give the sensor time to set up:
   delay(500);
+
 }
 
 void loop() {
   send_data();
-  delay(2500);
+  delay(1000);
 }
 
 void cc1101_config() {
+  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));  //SPI Begin
+  digitalWrite(chipSelectPin, 0); // Set the CS Pin LOW 
   uint8_t syncH = 0xEE; // 11101110 twice gives you a sync word of 1110111011101110
-  uint8_t syncL = 0xEE;
+  uint8_t syncL = 0xEE;  
   cc1101.setSyncWord(syncH, syncL);
   cc1101.setCarrierFreq(CFREQ_433);
-  cc1101.setTxPowerAmp(PA_LongDistance); 
+  //cc1101.setTxPowerAmp(PA_LowPower); // Need to see what this does
   //cc1101.writeReg(0x00, 0x0B); // IOCFG2 - GDO2 Output Pin Configuration
   cc1101.writeReg(0x02, 0x06); // IOCFG0 - GDO0 Output Pin Configuration
-  //cc1101.writeReg(0x03, 0x47); // FIFOTHR - RX FIFO and TX FIFO Thresholds
+  //cc1101.writeReg(0x03, 0x02); // FIFOTHR - RX FIFO and TX FIFO Thresholds
   cc1101.writeReg(0x06, 0x3D); // PKTLEN - Packet Length
   cc1101.writeReg(0x07, 0x01); // PKTCTRL1 - Disabled is 0x04, enabled with broadcast (0x00) is 0x06.
   cc1101.writeReg(0x08, 0x05); // PKTCTRL0 - Packet Automation Control - CRC and variable packet length
@@ -64,9 +75,14 @@ void cc1101_config() {
   cc1101.writeReg(0x19, 0x17); // FOCCFG - From 0x15 in the library
   cc1101.writeReg(0x21, 0xB6); // FREND1 - Select PATABLE index to use when sending a '1'
   cc1101.writeReg(0x22, 0x11); // FREND0 - Select PATABLE index to use when sending a '1'
+  set_patable();
+  digitalWrite(chipSelectPin, 1); // Set the CS Pin HIGH 
+  SPI.endTransaction();          // SPI End
 }
 
 void cc1101_registerDump() {
+  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));  //SPI Begin
+  digitalWrite(chipSelectPin, 0); // Set the CS Pin LOW
   Serial.println("Radio initialising\n");
   Serial.print("CC1101_PARTNUM: ");
   Serial.println(cc1101.readReg(CC1101_PARTNUM, CC1101_STATUS_REGISTER & 0xF0));
@@ -122,18 +138,20 @@ void cc1101_registerDump() {
   Serial.println(cc1101.readReg(0x21, CC1101_CONFIG_REGISTER), HEX);
   Serial.print("FREND0: Front end TX configuration - 0x");
   Serial.println(cc1101.readReg(0x22, CC1101_CONFIG_REGISTER), HEX);
-  Serial.println("device initialized");  
+  Serial.println("device initialized"); 
+  digitalWrite(chipSelectPin, 1); // Set the CS Pin HIGH   
+  SPI.endTransaction();          // SPI End 
 }
 
 void send_data() {
   CCPACKET data;
-
-  byte thing[9] = {0x20, 0x48, 0x69, 0x20, 0x50, 0x75, 0x6e, 0x6b};
+  byte thing[] = {0x20, 0x48, 0x61, 0x63, 0x6b, 0x20, 0x74, 0x68, 0x65, 0x20, 0x50, 0x6c, 0x61, 0x6e, 0x65, 0x74, 0x21, 0x21, 0x21, 0x21, 0x21};
+  //byte thing[] = {0x20, 0x48, 0x69, 0x20, 0x50, 0x75, 0x6e, 0x6b};
 
   memcpy(data.data, thing, sizeof(data.data));
 
   data.length = sizeof(thing);
-
+  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));  //SPI Begin
   if (cc1101.sendData(data)) {
     for (int i = 1; i < data.length; i++) {
       Serial.write(data.data[i]);
@@ -142,7 +160,16 @@ void send_data() {
     Serial.println("");
     Serial.print("TX count: ");
     Serial.println(txcount++);
+    Serial.println("");
   } else {
     Serial.println("sent failed :(");
-  }
+  }    
+  SPI.endTransaction();          // SPI End 
+}
+
+
+void set_patable()
+{
+  byte PA_TABLE[] = {0x00, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  cc1101.writeBurstReg(0x3E, PA_TABLE, 8);
 }

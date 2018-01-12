@@ -214,15 +214,15 @@ enum RFSTATE
 #define CC1101_DEFVAL_IOCFG2     0x2E        // GDO2 Output Pin Configuration
 #define CC1101_DEFVAL_IOCFG1     0x2E        // GDO1 Output Pin Configuration
 #define CC1101_DEFVAL_IOCFG0     0x06        // GDO0 Output Pin Configuration
-#define CC1101_DEFVAL_FIFOTHR    0x07        // RX FIFO and TX FIFO Thresholds
-#define CC1101_DEFVAL_SYNC1      0xB5        // Synchronization word, high byte
-#define CC1101_DEFVAL_SYNC0      0x47        // Synchronization word, low byte
-#define CC1101_DEFVAL_PKTLEN     0x3D        // Packet Length
-#define CC1101_DEFVAL_PKTCTRL1   0x06        // Packet Automation Control
-#define CC1101_DEFVAL_PKTCTRL0   0x05        // Packet Automation Control
-#define CC1101_DEFVAL_ADDR       0xFF        // Device Address
+#define CC1101_DEFVAL_FIFOTHR    0x47        // RX FIFO and TX FIFO Thresholds
+#define CC1101_DEFVAL_SYNC1      0xD3        // Synchronization word, high byte
+#define CC1101_DEFVAL_SYNC0      0x91        // Synchronization word, low byte
+#define CC1101_DEFVAL_PKTLEN     0xFF        // Packet Length
+#define CC1101_DEFVAL_PKTCTRL1   0x04        // Packet Automation Control
+#define CC1101_DEFVAL_PKTCTRL0   0x00        // Packet Automation Control
+#define CC1101_DEFVAL_ADDR       0x11        // Device Address
 #define CC1101_DEFVAL_CHANNR     0x00        // Channel Number
-#define CC1101_DEFVAL_FSCTRL1    0x08        // Frequency Synthesizer Control
+#define CC1101_DEFVAL_FSCTRL1    0x06        // Frequency Synthesizer Control
 #define CC1101_DEFVAL_FSCTRL0    0x00        // Frequency Synthesizer Control
 // Carrier frequency = 868 MHz
 #define CC1101_DEFVAL_FREQ2_868  0x21        // Frequency Control Word, High Byte
@@ -242,27 +242,26 @@ enum RFSTATE
 #define CC1101_DEFVAL_FREQ1_433  0xA7        // Frequency Control Word, Middle Byte
 #define CC1101_DEFVAL_FREQ0_433  0x62        // Frequency Control Word, Low Byte
 
-#define CC1101_DEFVAL_MDMCFG4_4800    0xC7   // Modem configuration. Speed = 4800 bps
-#define CC1101_DEFVAL_MDMCFG4_38400    0xCA   // Modem configuration. Speed = 38 Kbps
-#define CC1101_DEFVAL_MDMCFG3    0x83        // Modem Configuration
-#define CC1101_DEFVAL_MDMCFG2    0x93        // Modem Configuration
+#define CC1101_DEFVAL_MDMCFG4    0xE5        // Modem Configuration
+#define CC1101_DEFVAL_MDMCFG3    0xC3        // Modem Configuration
+#define CC1101_DEFVAL_MDMCFG2    0x30        // Modem Configuration
 #define CC1101_DEFVAL_MDMCFG1    0x22        // Modem Configuration
 #define CC1101_DEFVAL_MDMCFG0    0xF8        // Modem Configuration
-#define CC1101_DEFVAL_DEVIATN    0x35        // Modem Deviation Setting
+#define CC1101_DEFVAL_DEVIATN    0x15        // Modem Deviation Setting
 #define CC1101_DEFVAL_MCSM2      0x07        // Main Radio Control State Machine Configuration
 //#define CC1101_DEFVAL_MCSM1      0x30        // Main Radio Control State Machine Configuration
 #define CC1101_DEFVAL_MCSM1      0x20        // Main Radio Control State Machine Configuration
 #define CC1101_DEFVAL_MCSM0      0x18        // Main Radio Control State Machine Configuration
 #define CC1101_DEFVAL_FOCCFG     0x16        // Frequency Offset Compensation Configuration
 #define CC1101_DEFVAL_BSCFG      0x6C        // Bit Synchronization Configuration
-#define CC1101_DEFVAL_AGCCTRL2   0x43        // AGC Control
-#define CC1101_DEFVAL_AGCCTRL1   0x40        // AGC Control
+#define CC1101_DEFVAL_AGCCTRL2   0x03        // AGC Control
+#define CC1101_DEFVAL_AGCCTRL1   0x00        // AGC Control
 #define CC1101_DEFVAL_AGCCTRL0   0x91        // AGC Control
 #define CC1101_DEFVAL_WOREVT1    0x87        // High Byte Event0 Timeout
 #define CC1101_DEFVAL_WOREVT0    0x6B        // Low Byte Event0 Timeout
 #define CC1101_DEFVAL_WORCTRL    0xFB        // Wake On Radio Control
 #define CC1101_DEFVAL_FREND1     0x56        // Front End RX Configuration
-#define CC1101_DEFVAL_FREND0     0x10        // Front End TX Configuration
+#define CC1101_DEFVAL_FREND0     0x11        // Front End TX Configuration
 #define CC1101_DEFVAL_FSCAL3     0xE9        // Frequency Synthesizer Calibration
 #define CC1101_DEFVAL_FSCAL2     0x2A        // Frequency Synthesizer Calibration
 #define CC1101_DEFVAL_FSCAL1     0x00        // Frequency Synthesizer Calibration
@@ -272,9 +271,9 @@ enum RFSTATE
 #define CC1101_DEFVAL_FSTEST     0x59        // Frequency Synthesizer Calibration Control
 #define CC1101_DEFVAL_PTEST      0x7F        // Production Test
 #define CC1101_DEFVAL_AGCTEST    0x3F        // AGC Test
-#define CC1101_DEFVAL_TEST2      0x81        // Various Test Settings
-#define CC1101_DEFVAL_TEST1      0x35        // Various Test Settings
-#define CC1101_DEFVAL_TEST0      0x09        // Various Test Settings
+#define CC1101_DEFVAL_TEST2      0x88        // Various Test Settings
+#define CC1101_DEFVAL_TEST1      0x31        // Various Test Settings
+#define CC1101_DEFVAL_TEST0      0x0B        // Various Test Settings
 
 /**
  * Alias for some default values
@@ -332,7 +331,7 @@ class CC1101
      * 'buffer'	Data to be writen
      * 'len'	Data length
      */
-    void writeBurstReg(uint8_t regAddr, uint8_t* buffer, uint8_t len);
+    //void writeBurstReg(uint8_t regAddr, uint8_t* buffer, uint8_t len);
 
     /**
      * readBurstReg
@@ -357,7 +356,12 @@ class CC1101
      * RF state
      */
     uint8_t rfState;
-
+	
+   /**
+    * Tx Power byte (single PATABLE config)
+    */
+    byte paTableByte;
+	
     /**
      * Carrier frequency
      */
@@ -389,7 +393,8 @@ class CC1101
      * Class constructor
      */
     CC1101(void);
-
+	
+	void writeBurstReg(byte regAddr, byte* buffer, byte len);
     /**
      * cmdStrobe
      * 
@@ -451,8 +456,8 @@ class CC1101
      * @param freq Carrier frequency
      * @param mode Working mode (speed, ...)
      */
-    void init(uint8_t freq=CFREQ_868, uint8_t mode=0);
-
+    //void init(uint8_t freq=CFREQ_868, uint8_t mode=0);
+	void init(void);
     /**
      * setSyncWord
      * 
@@ -550,10 +555,10 @@ class CC1101
      * 
      * @param paLevel amplification value
      */
-    inline void setTxPowerAmp(uint8_t paLevel)
-    {
-      writeReg(CC1101_PATABLE, paLevel);
-    }
+    //inline void setTxPowerAmp(uint8_t paLevel)
+    //{
+    //  writeReg(CC1101_PATABLE, paLevel);
+   // }
 };
 
 #endif

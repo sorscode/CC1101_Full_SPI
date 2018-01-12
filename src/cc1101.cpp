@@ -53,11 +53,12 @@
  */
 CC1101::CC1101(void)
 {
-  carrierFreq = CFREQ_868;
-  channel = CC1101_DEFVAL_CHANNR;
-  syncWord[0] = CC1101_DEFVAL_SYNC1;
-  syncWord[1] = CC1101_DEFVAL_SYNC0;
-  devAddress = CC1101_DEFVAL_ADDR;
+  //carrierFreq = CFREQ_868;
+  //channel = CC1101_DEFVAL_CHANNR;
+  //syncWord[0] = CC1101_DEFVAL_SYNC1;
+  //syncWord[1] = CC1101_DEFVAL_SYNC0;
+  //devAddress = CC1101_DEFVAL_ADDR;
+  paTableByte = PA_LowPower;            // Priority = Low power
 }
 
 /**
@@ -67,11 +68,9 @@ CC1101::CC1101(void)
  */
 void CC1101::wakeUp(void)
 {
-  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));	//SPI Begin
   cc1101_Select();                      // Select CC1101
-  //wait_Miso();                          // Wait until MISO goes low
+  wait_Miso();                          // Wait until MISO goes low
   cc1101_Deselect();                    // Deselect CC1101
-  SPI.endTransaction();					// SPI End
 }
 
 /**
@@ -84,13 +83,11 @@ void CC1101::wakeUp(void)
  */
 void CC1101::writeReg(byte regAddr, byte value) 
 {
-  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));	//SPI Begin
   cc1101_Select();                      // Select CC1101
-  //wait_Miso();                        // Wait until MISO goes low
+  wait_Miso();                        // Wait until MISO goes low
   SPI.transfer(regAddr);                // Send register address
   SPI.transfer(value);                  // Send value
   cc1101_Deselect();                    // Deselect CC1101
-  SPI.endTransaction();					// SPI End
 }
 
 /**
@@ -107,7 +104,6 @@ void CC1101::writeBurstReg(byte regAddr, byte* buffer, byte len)
   byte addr, i;
   
   addr = regAddr | WRITE_BURST;         // Enable burst transfer
-  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));	//SPI Begin
   cc1101_Select();                      // Select CC1101
   wait_Miso();                          // Wait until MISO goes low
   SPI.transfer(addr);                   // Send register address
@@ -116,7 +112,6 @@ void CC1101::writeBurstReg(byte regAddr, byte* buffer, byte len)
     SPI.transfer(buffer[i]);            // Send value
 
   cc1101_Deselect();                    // Deselect CC1101
-  SPI.endTransaction();					// SPI End  
 }
 
 /**
@@ -128,12 +123,10 @@ void CC1101::writeBurstReg(byte regAddr, byte* buffer, byte len)
  */     
 void CC1101::cmdStrobe(byte cmd) 
 {
-  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));	//SPI Begin
   cc1101_Select();                      // Select CC1101
   wait_Miso();                          // Wait until MISO goes low
   SPI.transfer(cmd);                    // Send strobe command
   cc1101_Deselect();                    // Deselect CC1101
-  SPI.endTransaction();					// SPI End
 }
 
 /**
@@ -152,13 +145,11 @@ byte CC1101::readReg(byte regAddr, byte regType)
   byte addr, val;
 
   addr = regAddr | regType;
-  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));	//SPI Begin
   cc1101_Select();                      // Select CC1101
-  //wait_Miso();                        // Wait until MISO goes low
+  wait_Miso();                        // Wait until MISO goes low
   SPI.transfer(addr);                   // Send register address
   val = SPI.transfer(0x00);             // Read result
   cc1101_Deselect();                    // Deselect CC1101
-  SPI.endTransaction();					// SPI End
 
   return val;
 }
@@ -177,14 +168,12 @@ void CC1101::readBurstReg(byte * buffer, byte regAddr, byte len)
   byte addr, i;
   
   addr = regAddr | READ_BURST;
-  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));	//SPI Begin
   cc1101_Select();                      // Select CC1101
-  //wait_Miso();                        // Wait until MISO goes low
+  wait_Miso();                        // Wait until MISO goes low
   SPI.transfer(addr);                   // Send register address
   for(i=0 ; i<len ; i++)
     buffer[i] = SPI.transfer(0x00);     // Read result byte by byte
   cc1101_Deselect();                    // Deselect CC1101
-  SPI.endTransaction();					// SPI End
 }
 
 /**
@@ -195,15 +184,18 @@ void CC1101::readBurstReg(byte * buffer, byte regAddr, byte len)
 void CC1101::reset(void) 
 {
   cc1101_Deselect();                    // Deselect CC1101
-  SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));	//SPI Begin
   delayMicroseconds(5);
   cc1101_Select();                      // Select CC1101
   delayMicroseconds(10);
-  //wait_Miso();                        // Wait until MISO goes low
-  SPI.transfer(CC1101_SRES);            // Send reset command strobe
-  //wait_Miso();                        // Wait until MISO goes low
   cc1101_Deselect();                    // Deselect CC1101
-  SPI.endTransaction();					// SPI End      
+  delayMicroseconds(41);
+  cc1101_Select();                      // Select CC1101
+  
+  wait_Miso();                        // Wait until MISO goes low
+  SPI.transfer(CC1101_SRES);            // Send reset command strobe
+  wait_Miso(); 
+                         // Wait until MISO goes low
+  cc1101_Deselect();                    // Deselect CC1101   
   setCCregs();                          // Reconfigure CC1101
 
 }
@@ -224,31 +216,35 @@ void CC1101::setCCregs(void)
   writeReg(CC1101_PKTCTRL0,  CC1101_DEFVAL_PKTCTRL0);
 
   // Set default synchronization word
-  setSyncWord(syncWord);
+  setSyncWord(CC1101_DEFVAL_SYNC1, CC1101_DEFVAL_SYNC0);
 
   // Set default device address
-  setDevAddress(devAddress);
+  setDevAddress(CC1101_DEFVAL_ADDR);
 
   // Set default frequency channel
-  setChannel(channel);
+  setChannel(CC1101_DEFVAL_CHANNR);
+
+  writeReg(CC1101_CHANNR,  CC1101_DEFVAL_CHANNR);
+  writeReg(CC1101_ADDR,  CC1101_DEFVAL_ADDR);  
   
   writeReg(CC1101_FSCTRL1,  CC1101_DEFVAL_FSCTRL1);
   writeReg(CC1101_FSCTRL0,  CC1101_DEFVAL_FSCTRL0);
 
   // Set default carrier frequency = 868 MHz
-  setCarrierFreq(carrierFreq);
+  setCarrierFreq(CFREQ_433);
 
   // RF speed
-  if (workMode == MODE_LOW_SPEED)
-    writeReg(CC1101_MDMCFG4,  CC1101_DEFVAL_MDMCFG4_4800);
-  else
-    writeReg(CC1101_MDMCFG4,  CC1101_DEFVAL_MDMCFG4_38400);
-    
+  writeReg(CC1101_MDMCFG4,  CC1101_DEFVAL_MDMCFG4);
   writeReg(CC1101_MDMCFG3,  CC1101_DEFVAL_MDMCFG3);
   writeReg(CC1101_MDMCFG2,  CC1101_DEFVAL_MDMCFG2);
   writeReg(CC1101_MDMCFG1,  CC1101_DEFVAL_MDMCFG1);
   writeReg(CC1101_MDMCFG0,  CC1101_DEFVAL_MDMCFG0);
   writeReg(CC1101_DEVIATN,  CC1101_DEFVAL_DEVIATN);
+
+  writeReg(CC1101_PKTLEN,  CC1101_DEFVAL_PKTLEN);
+  writeReg(CC1101_PKTCTRL1,  CC1101_DEFVAL_PKTCTRL1);
+  writeReg(CC1101_PKTCTRL0,  CC1101_DEFVAL_PKTCTRL0);
+
   writeReg(CC1101_MCSM2,  CC1101_DEFVAL_MCSM2);
   writeReg(CC1101_MCSM1,  CC1101_DEFVAL_MCSM1);
   writeReg(CC1101_MCSM0,  CC1101_DEFVAL_MCSM0);
@@ -276,9 +272,9 @@ void CC1101::setCCregs(void)
   writeReg(CC1101_TEST0,  CC1101_DEFVAL_TEST0);
   
   // Send empty packet
-  CCPACKET packet;
-  packet.length = 0;
-  sendData(packet);
+  //CCPACKET packet;
+  //packet.length = 0;
+  //sendData(packet);
 }
 
 /**
@@ -290,17 +286,21 @@ void CC1101::setCCregs(void)
  * @param mode Working mode (speed, ...)
  */
 
-void CC1101::init(uint8_t freq, uint8_t mode)
+//void CC1101::init(uint8_t freq, uint8_t mode)
+void CC1101::init(void)
 {
-	Serial.println("Hello from Init");
-    carrierFreq = freq;
-	workMode = mode;
+	//Serial.println("Hello from Init");
+    //carrierFreq = freq;
+	//workMode = mode;
 	//reset();                              // Reset CC1101
 	
   // Configure PATABLE
-	Serial.println("PATABLE");
-	setTxPowerAmp(PA_LowPower);
-	Serial.println("PATABLE-End");
+	//Serial.println("PATABLE");
+	//setTxPowerAmp(PA_LowPower);
+	//Serial.println("PATABLE-End");
+	reset();
+	
+	writeReg(CC1101_PATABLE, paTableByte);
 	
 }
 
