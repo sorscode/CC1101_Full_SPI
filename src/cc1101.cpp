@@ -29,13 +29,13 @@
  * Macros
  */
 // Select (SPI) CC1101
-#define cc1101_Select()  digitalWrite(SS, LOW)
+#define cc1101_Select()  digitalWrite(parameter.SPI_cs, LOW)
 // Deselect (SPI) CC1101
-#define cc1101_Deselect()  digitalWrite(SS, HIGH)
+#define cc1101_Deselect()  digitalWrite(parameter.SPI_cs, HIGH)
 // Wait until SPI MISO line goes low
 #define wait_Miso()  while(digitalRead(MISO)>0)
 // Get GDO0 pin state
-#define getGDO0state()  digitalRead(CC1101_GDO0)
+#define getGDO0state()  digitalRead(parameter.GDO0_pin)
 // Wait until GDO0 line goes high
 #define wait_GDO0_high()  while(!getGDO0state())
 // Wait until GDO0 line goes low
@@ -53,12 +53,7 @@
  */
 CC1101::CC1101(void)
 {
-  //carrierFreq = CFREQ_868;
-  //channel = CC1101_DEFVAL_CHANNR;
-  //syncWord[0] = CC1101_DEFVAL_SYNC1;
-  //syncWord[1] = CC1101_DEFVAL_SYNC0;
-  //devAddress = CC1101_DEFVAL_ADDR;
-  paTableByte = PA_LowPower;            // Priority = Low power
+	paTableByte = PA_LowPower;            // Priority = Low power
 }
 
 /**
@@ -270,11 +265,6 @@ void CC1101::setCCregs(void)
   writeReg(CC1101_TEST2,  CC1101_DEFVAL_TEST2);
   writeReg(CC1101_TEST1,  CC1101_DEFVAL_TEST1);
   writeReg(CC1101_TEST0,  CC1101_DEFVAL_TEST0);
-  
-  // Send empty packet
-  //CCPACKET packet;
-  //packet.length = 0;
-  //sendData(packet);
 }
 
 /**
@@ -286,18 +276,8 @@ void CC1101::setCCregs(void)
  * @param mode Working mode (speed, ...)
  */
 
-//void CC1101::init(uint8_t freq, uint8_t mode)
 void CC1101::init(void)
 {
-	//Serial.println("Hello from Init");
-    //carrierFreq = freq;
-	//workMode = mode;
-	//reset();                              // Reset CC1101
-	
-  // Configure PATABLE
-	//Serial.println("PATABLE");
-	//setTxPowerAmp(PA_LowPower);
-	//Serial.println("PATABLE-End");
 	reset();
 	
 	writeReg(CC1101_PATABLE, paTableByte);

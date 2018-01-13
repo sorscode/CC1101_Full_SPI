@@ -4,9 +4,10 @@
 
 CC1101 cc1101;
 
-const int dataReadyPin = 2;
+const int dataReadyPin = 2; 
 const int chipSelectPin = 10;
 const int triggerPin = 16;
+
 
 // Global variable to trigger GDO0 activity
 volatile bool trigger = false;
@@ -22,16 +23,16 @@ void send_data(void);
 void setup() {
   Serial.begin(9600);
   pinMode(triggerPin, OUTPUT);
-  digitalWrite(triggerPin, 0);
-  delay(1000);
-  digitalWrite(triggerPin, 1);
+  // digitalWrite(triggerPin, 0); //Using this to Trigger my Logic Analyzer, set the pin Low
+  // delay(250);
+  // digitalWrite(triggerPin, 1); //Using this to Trigger my Logic Analyzer, set the pin High (Rising Edge)
   SPI.begin();
   pinMode(dataReadyPin, INPUT);
   pinMode(chipSelectPin, OUTPUT);
   
-  //digitalWrite(triggerPin, 0);
-  //delay(500);
-  //digitalWrite(triggerPin, 1);
+  cc1101.parameter.SPI_cs = chipSelectPin;
+  cc1101.parameter.GDO0_pin = dataReadyPin;
+  
   cc1101.init();
   cc1101_config();
   cc1101_registerDump();

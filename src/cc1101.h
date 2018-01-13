@@ -36,8 +36,9 @@
 enum CFREQ
 {
   CFREQ_868 = 0,
+  CFREQ_315,  
+  CFREQ_433,  
   CFREQ_915,
-  CFREQ_433,
   CFREQ_918,
   CFREQ_LAST
 };
@@ -236,7 +237,10 @@ enum RFSTATE
 #define CC1101_DEFVAL_FREQ2_918  0x23        // Frequency Control Word, High Byte
 #define CC1101_DEFVAL_FREQ1_918  0x4E        // Frequency Control Word, Middle Byte
 #define CC1101_DEFVAL_FREQ0_918  0xC4        // Frequency Control Word, Low Byte
-
+// Carrier frequency = 315 MHz
+#define CC1101_DEFVAL_FREQ2_315  0x0C        // Frequency Control Word, High Byte
+#define CC1101_DEFVAL_FREQ1_315  0x1D        // Frequency Control Word, Middle Byte
+#define CC1101_DEFVAL_FREQ0_315  0x89		 // Frequency Control Word, Low Byte
 // Carrier frequency = 433 MHz
 #define CC1101_DEFVAL_FREQ2_433  0x10        // Frequency Control Word, High Byte
 #define CC1101_DEFVAL_FREQ1_433  0xA7        // Frequency Control Word, Middle Byte
@@ -332,7 +336,7 @@ class CC1101
      * 'len'	Data length
      */
     //void writeBurstReg(uint8_t regAddr, uint8_t* buffer, uint8_t len);
-
+   
     /**
      * readBurstReg
      * 
@@ -350,8 +354,15 @@ class CC1101
      * Set registers from EEPROM
      */
     void setRegsFromEeprom(void);
+	
+	struct deviceParameter
+	{
+		int8_t SPI_cs;
+		int8_t GDO0_pin;
+	};
 
   public:
+    deviceParameter parameter;
     /*
      * RF state
      */
