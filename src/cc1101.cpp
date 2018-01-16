@@ -1,6 +1,7 @@
 /**
  * Copyright (c) 2011 panStamp <contact@panstamp.com>
  * Copyright (c) 2016 Tyler Sommer <contact@tylersommer.pro>
+ * Copyright (c) 2017 Danny Kimbler <contact@sorscode.com>
  * 
  * This file is part of the CC1101 project.
  * 

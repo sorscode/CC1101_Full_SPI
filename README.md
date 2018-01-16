@@ -10,6 +10,10 @@ I don't take full credit for this project, as I have just taken other peoples wo
 - Arduino code to get everything running
 - Full SPI Support
 
+## Known Working MCU - Send only right now
+- Teensy 3.1/3.2
+- Espressif ESP32
+
 ## Future:
 - Compatibility
 - Multiple CC11xx modules (Maybe)
