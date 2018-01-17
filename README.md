@@ -12,7 +12,10 @@ I don't take full credit for this project, as I have just taken other peoples wo
 
 ## Known Working MCU - Send only right now
 - Teensy 3.1/3.2
+- Teensy LC
+- Teensy 3.5/3.6
 - Espressif ESP32
+
 
 ## Future:
 - Compatibility
