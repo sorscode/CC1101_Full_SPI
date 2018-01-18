@@ -4,16 +4,14 @@
 
 CC1101 cc1101;
 
-const int dataReadyPin = 2; 
+const int dataReadyPin = 2;
 const int chipSelectPin = 10;
 const int triggerPin = 16;
-
 
 // Global variable to trigger GDO0 activity
 volatile bool trigger = false;
 
 // Packet count
-uint32_t rxcount;
 uint32_t txcount;
 
 void cc1101_config(void);
@@ -23,15 +21,15 @@ void send_data(void);
 void setup() {
   Serial.begin(9600);
   pinMode(triggerPin, OUTPUT);
-  // digitalWrite(triggerPin, 0); //Using this to Trigger my Logic Analyzer, set the pin Low
-  // delay(250);
-  // digitalWrite(triggerPin, 1); //Using this to Trigger my Logic Analyzer, set the pin High (Rising Edge)
+  //digitalWrite(triggerPin, 0); //Using this to Trigger my Logic Analyzer, set the pin Low
+  //delay(250);
+  //digitalWrite(triggerPin, 1); //Using this to Trigger my Logic Analyzer, set the pin High (Rising Edge)
   SPI.begin();
   pinMode(dataReadyPin, INPUT);
   pinMode(chipSelectPin, OUTPUT);
-  
-  cc1101.parameter.SPI_cs = chipSelectPin;
-  cc1101.parameter.GDO0_pin = dataReadyPin;
+
+  cc1101.cc11xx_cfg.CS_pin = chipSelectPin;
+  cc1101.cc11xx_cfg.GDO0_pin = dataReadyPin;
   
   cc1101.init();
   cc1101_config();
@@ -43,7 +41,7 @@ void setup() {
 
 void loop() {
   send_data();
-  delay(1000);
+  delay(3000);
 }
 
 void cc1101_config() {
@@ -53,14 +51,13 @@ void cc1101_config() {
   uint8_t syncL = 0xEE;  
   cc1101.setSyncWord(syncH, syncL);
   cc1101.setCarrierFreq(CFREQ_433);
-  //cc1101.setTxPowerAmp(PA_LowPower); // Need to see what this does
   //cc1101.writeReg(0x00, 0x0B); // IOCFG2 - GDO2 Output Pin Configuration
   cc1101.writeReg(0x02, 0x06); // IOCFG0 - GDO0 Output Pin Configuration
   //cc1101.writeReg(0x03, 0x02); // FIFOTHR - RX FIFO and TX FIFO Thresholds
-  cc1101.writeReg(0x06, 0x3D); // PKTLEN - Packet Length
+  cc1101.writeReg(0x06, 0x3d); // PKTLEN - Packet Length
   cc1101.writeReg(0x07, 0x01); // PKTCTRL1 - Disabled is 0x04, enabled with broadcast (0x00) is 0x06.
   cc1101.writeReg(0x08, 0x05); // PKTCTRL0 - Packet Automation Control - CRC and variable packet length
-  cc1101.writeReg(0x09, 0xDB); // ADDR - Effectively the Hostname
+  cc1101.writeReg(0x09, 0xdb); // ADDR - Effectively the Hostname
   cc1101.writeReg(0x0A, 0x00); // CHANNR - Channel Number - 0x00 is default
   cc1101.writeReg(0x0B, 0x06); // FSCTRL1 - Frequency Synthesizer Control
   cc1101.writeReg(0x0C, 0x00); // FSCTRL0 - Frequency Synthesizer Control - 0x00 is default
@@ -68,13 +65,13 @@ void cc1101_config() {
   cc1101.writeReg(0x0E, 0xA7); // FREQ1 - Frequency Control Word, Middle Byte
   cc1101.writeReg(0x0F, 0x62); // FREQ0 - Frequency Control Word, Low Byte
   cc1101.writeReg(0x10, 0xC6); // MDMCFG4 - channel bandwidth and exponent for calculating data rate - from 0xC5
-  cc1101.writeReg(0x11, 0xE7); // MDMCFG3 - Data Rate - DRATE = 1000000.0 * MHZ * (256+drate_m) * powf(2,drate_e) / powf(2,28);
-  cc1101.writeReg(0x12, 0x1A); // MDMCFG2 - Modulation type (OOK/ASK) / manchester / sync mode - dc block, GFSK, manchester, 16/16
+  cc1101.writeReg(0x11, 0xe7); // MDMCFG3 - Data Rate - DRATE = 1000000.0 * MHZ * (256+drate_m) * powf(2,drate_e) / powf(2,28);
+  cc1101.writeReg(0x12, 0x1a); // MDMCFG2 - Modulation type (OOK/ASK) / manchester / sync mode - dc block, GFSK, manchester, 16/16
   cc1101.writeReg(0x13, 0x02); // MDMCFG1 - FEC / preamble - 00000010 - No FEC, 2 bytes of preamble, reserved, two bit exponent of channel spacing - 03 **
   cc1101.writeReg(0x14, 0x11); // MDMCFG0 - Channel spacing
-  cc1101.writeReg(0x15, 0x36); // Deviation - https://twitter.com/gareth__/status/801191335566839808
+  cc1101.writeReg(0x15, 0x36); // Deviation
   cc1101.writeReg(0x19, 0x17); // FOCCFG - From 0x15 in the library
-  cc1101.writeReg(0x21, 0xB6); // FREND1 - Select PATABLE index to use when sending a '1'
+  cc1101.writeReg(0x21, 0xb6); // FREND1 - Select PATABLE index to use when sending a '1'
   cc1101.writeReg(0x22, 0x11); // FREND0 - Select PATABLE index to use when sending a '1'
   set_patable();
   digitalWrite(chipSelectPin, 1); // Set the CS Pin HIGH 
@@ -146,8 +143,10 @@ void cc1101_registerDump() {
 
 void send_data() {
   CCPACKET data;
-  byte thing[] = {0x20, 0x48, 0x61, 0x63, 0x6b, 0x20, 0x74, 0x68, 0x65, 0x20, 0x50, 0x6c, 0x61, 0x6e, 0x65, 0x74, 0x21, 0x21, 0x21, 0x21, 0x21};
-  //byte thing[] = {0x20, 0x48, 0x69, 0x20, 0x50, 0x75, 0x6e, 0x6b};
+  //Hack the Planet!!!!
+  // byte thing[] = {0x20, 0x48, 0x61, 0x63, 0x6b, 0x20, 0x74, 0x68, 0x65, 0x20, 0x50, 0x6c, 0x61, 0x6e, 0x65, 0x74, 0x21, 0x21, 0x21, 0x21, 0x21};
+  // Hi Punk
+  byte thing[] = {0x20, 0x48, 0x69, 0x20, 0x50, 0x75, 0x6e, 0x6b};
 
   memcpy(data.data, thing, sizeof(data.data));
 

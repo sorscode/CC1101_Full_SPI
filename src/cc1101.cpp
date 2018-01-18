@@ -2,25 +2,26 @@
  * Copyright (c) 2011 panStamp <contact@panstamp.com>
  * Copyright (c) 2016 Tyler Sommer <contact@tylersommer.pro>
  * Copyright (c) 2017 Danny Kimbler <contact@sorscode.com>
- * 
+ *
  * This file is part of the CC1101 project.
- * 
+ *
  * CC1101 is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * any later version.
- * 
+ *
  * CC1101 is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with CC1101; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 
  * USA
  * 
  * Author: Daniel Berenguer
+ * receiveData fixes: Samy Kamkar
  * Creation date: 03/03/2011
  */
 
@@ -30,22 +31,23 @@
  * Macros
  */
 // Select (SPI) CC1101
-#define cc1101_Select()  digitalWrite(parameter.SPI_cs, LOW)
+#define cc1101_Select()  digitalWrite(cc11xx_cfg.CS_pin, LOW)
 // Deselect (SPI) CC1101
-#define cc1101_Deselect()  digitalWrite(parameter.SPI_cs, HIGH)
+#define cc1101_Deselect()  digitalWrite(cc11xx_cfg.CS_pin, HIGH)
 // Wait until SPI MISO line goes low
 #define wait_Miso()  while(digitalRead(MISO)>0)
 // Get GDO0 pin state
-#define getGDO0state()  digitalRead(parameter.GDO0_pin)
+#define getGDO0state()  digitalRead(cc11xx_cfg.GDO0_pin)
 // Wait until GDO0 line goes high
 #define wait_GDO0_high()  while(!getGDO0state())
 // Wait until GDO0 line goes low
 #define wait_GDO0_low()  while(getGDO0state())
-
- /**
-  * PATABLE
-  */
-//const byte paTable[8] = {0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60, 0x60};
+// Read CC1101 Config register
+#define readConfigReg(regAddr)    readReg(regAddr, CC1101_CONFIG_REGISTER)
+// Read CC1101 Status register
+#define readStatusReg(regAddr)    readReg(regAddr, CC1101_STATUS_REGISTER)
+// Get Marcstate
+#define getMarcstate() (readStatusReg(CC1101_MARCSTATE) & 0x1F)
 
 /**
  * CC1101
@@ -54,7 +56,7 @@
  */
 CC1101::CC1101(void)
 {
-	paTableByte = PA_LowPower;            // Priority = Low power
+  paTableByte = PA_LowPower;            // Priority = Low power
 }
 
 /**
@@ -80,9 +82,9 @@ void CC1101::wakeUp(void)
 void CC1101::writeReg(byte regAddr, byte value) 
 {
   cc1101_Select();                      // Select CC1101
-  wait_Miso();                        // Wait until MISO goes low
-  SPI.transfer(regAddr);                // Send register address
-  SPI.transfer(value);                  // Send value
+  wait_Miso();                          // Wait until MISO goes low
+  SPI.transfer(regAddr);                    // Send register address
+  SPI.transfer(value);                      // Send value
   cc1101_Deselect();                    // Deselect CC1101
 }
 
@@ -102,12 +104,12 @@ void CC1101::writeBurstReg(byte regAddr, byte* buffer, byte len)
   addr = regAddr | WRITE_BURST;         // Enable burst transfer
   cc1101_Select();                      // Select CC1101
   wait_Miso();                          // Wait until MISO goes low
-  SPI.transfer(addr);                   // Send register address
+  SPI.transfer(addr);                       // Send register address
   
   for(i=0 ; i<len ; i++)
-    SPI.transfer(buffer[i]);            // Send value
+    SPI.transfer(buffer[i]);                // Send value
 
-  cc1101_Deselect();                    // Deselect CC1101
+  cc1101_Deselect();                    // Deselect CC1101  
 }
 
 /**
@@ -121,7 +123,7 @@ void CC1101::cmdStrobe(byte cmd)
 {
   cc1101_Select();                      // Select CC1101
   wait_Miso();                          // Wait until MISO goes low
-  SPI.transfer(cmd);                    // Send strobe command
+  SPI.transfer(cmd);                        // Send strobe command
   cc1101_Deselect();                    // Deselect CC1101
 }
 
@@ -136,15 +138,15 @@ void CC1101::cmdStrobe(byte cmd)
  * Return:
  * 	Data byte returned by the CC1101 IC
  */
-byte CC1101::readReg(byte regAddr, byte regType)
+byte CC1101::readReg(byte regAddr, byte regType) 
 {
   byte addr, val;
 
   addr = regAddr | regType;
   cc1101_Select();                      // Select CC1101
-  wait_Miso();                        // Wait until MISO goes low
-  SPI.transfer(addr);                   // Send register address
-  val = SPI.transfer(0x00);             // Read result
+  wait_Miso();                          // Wait until MISO goes low
+  SPI.transfer(addr);                       // Send register address
+  val = SPI.transfer(0x00);                 // Read result
   cc1101_Deselect();                    // Deselect CC1101
 
   return val;
@@ -165,15 +167,15 @@ void CC1101::readBurstReg(byte * buffer, byte regAddr, byte len)
   
   addr = regAddr | READ_BURST;
   cc1101_Select();                      // Select CC1101
-  wait_Miso();                        // Wait until MISO goes low
-  SPI.transfer(addr);                   // Send register address
+  wait_Miso();                          // Wait until MISO goes low
+  SPI.transfer(addr);                       // Send register address
   for(i=0 ; i<len ; i++)
-    buffer[i] = SPI.transfer(0x00);     // Read result byte by byte
+    buffer[i] = SPI.transfer(0x00);         // Read result byte by byte
   cc1101_Deselect();                    // Deselect CC1101
 }
 
 /**
- * 
+ * reset
  * 
  * Reset CC1101
  */
@@ -186,22 +188,22 @@ void CC1101::reset(void)
   cc1101_Deselect();                    // Deselect CC1101
   delayMicroseconds(41);
   cc1101_Select();                      // Select CC1101
-  
-  wait_Miso();                        // Wait until MISO goes low
-  SPI.transfer(CC1101_SRES);            // Send reset command strobe
-  wait_Miso(); 
-                         // Wait until MISO goes low
-  cc1101_Deselect();                    // Deselect CC1101   
-  setCCregs();                          // Reconfigure CC1101
 
+  wait_Miso();                          // Wait until MISO goes low
+  SPI.transfer(CC1101_SRES);                // Send reset command strobe
+  wait_Miso();                          // Wait until MISO goes low
+
+  cc1101_Deselect();                    // Deselect CC1101
+
+  setDefaultRegs();                     // Reconfigure CC1101
 }
 
 /**
- * setCCregs
+ * setDefaultRegs
  * 
  * Configure CC1101 registers
  */
-void CC1101::setCCregs(void) 
+void CC1101::setDefaultRegs(void) 
 {
   writeReg(CC1101_IOCFG2,  CC1101_DEFVAL_IOCFG2);
   writeReg(CC1101_IOCFG1,  CC1101_DEFVAL_IOCFG1);
@@ -216,20 +218,21 @@ void CC1101::setCCregs(void)
 
   // Set default device address
   setDevAddress(CC1101_DEFVAL_ADDR);
-
   // Set default frequency channel
   setChannel(CC1101_DEFVAL_CHANNR);
+  
 
   writeReg(CC1101_CHANNR,  CC1101_DEFVAL_CHANNR);
-  writeReg(CC1101_ADDR,  CC1101_DEFVAL_ADDR);  
-  
+  writeReg(CC1101_ADDR,  CC1101_DEFVAL_ADDR);
+
+
+
   writeReg(CC1101_FSCTRL1,  CC1101_DEFVAL_FSCTRL1);
   writeReg(CC1101_FSCTRL0,  CC1101_DEFVAL_FSCTRL0);
 
-  // Set default carrier frequency = 868 MHz
+  // Set default carrier frequency = 433 MHz
   setCarrierFreq(CFREQ_433);
 
-  // RF speed
   writeReg(CC1101_MDMCFG4,  CC1101_DEFVAL_MDMCFG4);
   writeReg(CC1101_MDMCFG3,  CC1101_DEFVAL_MDMCFG3);
   writeReg(CC1101_MDMCFG2,  CC1101_DEFVAL_MDMCFG2);
@@ -271,20 +274,14 @@ void CC1101::setCCregs(void)
 /**
  * init
  * 
- * Initialize CC1101 radio
- *
- * @param freq Carrier frequency
- * @param mode Working mode (speed, ...)
+ * Initialize CC1101
  */
-
-void CC1101::init(void)
+void CC1101::init(void) 
 {
 	reset();
-	
-	writeReg(CC1101_PATABLE, paTableByte);
-	
+ 
+  writeReg(CC1101_PATABLE, paTableByte);
 }
-
 
 /**
  * setSyncWord
@@ -296,10 +293,13 @@ void CC1101::init(void)
  */
 void CC1101::setSyncWord(uint8_t syncH, uint8_t syncL) 
 {
-  writeReg(CC1101_SYNC1, syncH);
-  writeReg(CC1101_SYNC0, syncL);
-  syncWord[0] = syncH;
-  syncWord[1] = syncL;
+  if ((syncWord[0] != syncH) || (syncWord[1] != syncL))
+  {
+    writeReg(CC1101_SYNC1, syncH);
+    writeReg(CC1101_SYNC0, syncL);
+    syncWord[0] = syncH;
+    syncWord[1] = syncL;
+  }
 }
 
 /**
@@ -319,12 +319,15 @@ void CC1101::setSyncWord(byte *sync)
  * 
  * Set device address
  * 
- * @param addr	Device address
+ * 'addr'	Device address
  */
 void CC1101::setDevAddress(byte addr) 
 {
-  writeReg(CC1101_ADDR, addr);
-  devAddress = addr;
+  if (devAddress != addr)
+  {
+    writeReg(CC1101_ADDR, addr);
+    devAddress = addr;
+  }
 }
 
 /**
@@ -336,8 +339,11 @@ void CC1101::setDevAddress(byte addr)
  */
 void CC1101::setChannel(byte chnl) 
 {
-  writeReg(CC1101_CHANNR,  chnl);
-  channel = chnl;
+  if (channel != chnl)
+  {
+    writeReg(CC1101_CHANNR,  chnl);
+    channel = chnl;
+  }
 }
 
 /**
@@ -361,11 +367,11 @@ void CC1101::setCarrierFreq(byte freq)
       writeReg(CC1101_FREQ1,  CC1101_DEFVAL_FREQ1_433);
       writeReg(CC1101_FREQ0,  CC1101_DEFVAL_FREQ0_433);
       break;
-    case CFREQ_918:
-      writeReg(CC1101_FREQ2,  CC1101_DEFVAL_FREQ2_918);
-      writeReg(CC1101_FREQ1,  CC1101_DEFVAL_FREQ1_918);
-      writeReg(CC1101_FREQ0,  CC1101_DEFVAL_FREQ0_918);
-      break;
+    case CFREQ_315:
+      writeReg(CC1101_FREQ2,  CC1101_DEFVAL_FREQ2_315);
+      writeReg(CC1101_FREQ1,  CC1101_DEFVAL_FREQ1_315);
+	  writeReg(CC1101_FREQ0,  CC1101_DEFVAL_FREQ0_315);
+      break;  
     default:
       writeReg(CC1101_FREQ2,  CC1101_DEFVAL_FREQ2_868);
       writeReg(CC1101_FREQ1,  CC1101_DEFVAL_FREQ1_868);
@@ -400,43 +406,37 @@ void CC1101::setPowerDownState()
  *    True if the transmission succeeds
  *    False otherwise
  */
-bool CC1101::sendData(CCPACKET packet)
+boolean CC1101::sendData(CCPACKET packet)
 {
+  Serial.println("Test Point 1");
   byte marcState;
   bool res = false;
  
   // Declare to be in Tx state. This will avoid receiving packets whilst
   // transmitting
+  Serial.println("Test Point 2");
   rfState = RFSTATE_TX;
-
+  Serial.println("Test Point 3");
   // Enter RX state
   setRxState();
-
-  int tries = 0;
+  Serial.println("Test Point 4");
   // Check that the RX state has been entered
-  while (tries++ < 1000 && ((marcState = readStatusReg(CC1101_MARCSTATE)) & 0x1F) != 0x0D)
+  while (((marcState = readStatusReg(CC1101_MARCSTATE)) & 0x1F) != 0x0D)
   {
     if (marcState == 0x11)        // RX_OVERFLOW
       flushRxFifo();              // flush receive queue
   }
-  if (tries >= 1000) {
-    // TODO: MarcState sometimes never enters the expected state; this is a hack workaround.
-    return false;
-  }
-
+  Serial.println("Test Point 5");
   delayMicroseconds(500);
-
-  if (packet.length > 0)
-  {
-    // Set data length at the first position of the TX FIFO
-    writeReg(CC1101_TXFIFO,  packet.length);
-    // Write data into the TX FIFO
-    writeBurstReg(CC1101_TXFIFO, packet.data, packet.length);
-
-    // CCA enabled: will enter TX state only if the channel is clear
-    setTxState();
-  }
-
+  Serial.println("Test Point 6");
+  // Set data length at the first position of the TX FIFO
+  // writeReg(CC1101_TXFIFO,  packet.length);
+  // Write data into the TX FIFO
+  writeBurstReg(CC1101_TXFIFO, packet.data, packet.length);
+  Serial.println("Test Point 7");
+  // CCA enabled: will enter TX state only if the channel is clear
+  setTxState();
+  Serial.println("Test Point 8");
   // Check that TX state is being entered (state = RXTX_SETTLING)
   marcState = readStatusReg(CC1101_MARCSTATE) & 0x1F;
   if((marcState != 0x13) && (marcState != 0x14) && (marcState != 0x15))
@@ -449,26 +449,26 @@ bool CC1101::sendData(CCPACKET packet)
     rfState = RFSTATE_RX;
     return false;
   }
-
+  Serial.println("Test Point 9");
   // Wait for the sync word to be transmitted
   wait_GDO0_high();
-
+  Serial.println("Test Point 10");
   // Wait until the end of the packet transmission
   wait_GDO0_low();
-
+  Serial.println("Test Point 11");
   // Check that the TX FIFO is empty
   if((readStatusReg(CC1101_TXBYTES) & 0x7F) == 0)
     res = true;
-
+  Serial.println("Test Point 12");
   setIdleState();       // Enter IDLE state
   flushTxFifo();        // Flush Tx FIFO
-
+  Serial.println("Test Point 13");
   // Enter back into RX state
   setRxState();
-
+  Serial.println("Test Point 14");
   // Declare to be in Rx state
   rfState = RFSTATE_RX;
-
+  Serial.println("Test Point 15");
   return res;
 }
 
@@ -485,15 +485,23 @@ bool CC1101::sendData(CCPACKET packet)
 byte CC1101::receiveData(CCPACKET * packet)
 {
   byte val;
-  byte rxBytes = readStatusReg(CC1101_RXBYTES);
+  byte rxbytes = readStatusReg(CC1101_RXBYTES);
 
-  // Any byte waiting to be read and no overflow?
-  if (rxBytes & 0x7F && !(rxBytes & 0x80))
+  // Rx FIFO overflow?
+  if (getMarcstate() == 0x11)
+  {
+    setIdleState();       // Enter IDLE state
+    flushRxFifo();        // Flush Rx FIFO
+    packet->length = 0;
+  }
+  // Any byte waiting to be read?
+  else if (rxbytes & 0x7F)
   {
     // Read data length
-    packet->length = readConfigReg(CC1101_RXFIFO);
+    packet->length = readStatusReg(CC1101_RXBYTES) & 0x7F;
+
     // If packet is too long
-    if (packet->length > CCPACKET_DATA_LEN)
+    if (packet->length > CC1101_DATA_LEN)
       packet->length = 0;   // Discard packet
     else
     {
@@ -506,39 +514,15 @@ byte CC1101::receiveData(CCPACKET * packet)
       packet->lqi = val & 0x7F;
       packet->crc_ok = bitRead(val, 7);
     }
+
+    // empty fifo here
+    flushRxFifo();
   }
   else
     packet->length = 0;
-
-  setIdleState();       // Enter IDLE state
-  flushRxFifo();        // Flush Rx FIFO
-  //cmdStrobe(CC1101_SCAL);
 
   // Back to RX state
   setRxState();
 
   return packet->length;
 }
-
-/**
- * setRxState
- * 
- * Enter Rx state
- */
-void CC1101::setRxState(void)
-{
-  cmdStrobe(CC1101_SRX);
-  rfState = RFSTATE_RX;
-}
-
-/**
- * setTxState
- * 
- * Enter Tx state
- */
-void CC1101::setTxState(void)
-{
-  cmdStrobe(CC1101_STX);
-  rfState = RFSTATE_TX;
-}
-
