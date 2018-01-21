@@ -1,17 +1,17 @@
 # CC11XX Library that supports full SPI
 
 ## Description:
-This is a library that I'm using to get Full SPI working with Transactions. It currently works with a Teensy 3.1/3.2. I'm going to also test this on other platforms like Cortex M0's, Atmel SAMDxx, Espressif ESP8266, Espressif ESP32, etc. I'm up to any recommendations on other platforms to make it compatible with. 
+This is a library that I'm using to get Full SPI working with transactions. It currently works with a Teensy 3.1/3.2. This will be tested on other platforms like Cortex M0's, Atmel SAMDxx, Espressif ESP8266, Espressif ESP32, etc. I'm open to requests to create compatibility with other platforms. 
 
-I don't take full credit for this project as I have just taken other peoples work, and started experimenting to make it work correctly. I did find other SPI libraries for the CC11xx but none seem to work, unstable, or outdated. My goal is to get this working fully. I have it working today on a Teensy 3.1/3.2 and other platforms listed below, but that is all I have tested it on. 
+I cannot take full credit for this project, as I have leveraged other peoples' work-in-progress and started experimenting to make it work correctly. I did find other SPI libraries for the CC11xx but either they were unstable, outdated, or just did not work properly. My goal is to get this working fully. I have it working today on a Teensy 3.1/3.2 and have tested on the platforms listed below. 
 
-I have added a Receive Example, it's set for 315MHz right now. It can be changed easily to any of the CC11xx supported frequencies. I'm using some cheap modules purchased off eBay. They were originally designed to work at 433MHz, but I am able to send and receive in the 315MHz range. I'm sure it's not 100% ideal, but does work. I have not tested higher ranges, but will assume it works, but will try later.
+I have added a Receive Example, it's set for 315MHz right now. It can be easily changed to any of the CC11xx supported frequencies. I'm using some cheap modules purchased off eBay. They were originally designed to work at 433MHz, but I am able to send and receive in the 315MHz range. I'm sure it's not 100% ideal; however it does work. I have not tested higher ranges yet.
 
-The receive example is mainly for devices that don't have Multi-Core. I will build a seperate one for the Espressif ESP32 in the near future. It won't take much to make it work. Eventually I will consolidate all examples down to a single RX example, and a single TX Example.
+The Receive Example is mainly for devices that do not have Multi-Core. I will build a separate example for the Espressif ESP32 in the near future. Eventually, I will consolidate all examples down to a single RX example, and a single TX Example.
 
-Most of my random isssues I was experiencing have all been cleaned up, and no longer happen.
+Most random issues experienced (e.g. not always sending data) have been cleaned up and no longer happen.
 
-I've add what I call cc11xxOptions, which gives you the ability to assign the Chip Select, GDO0, and GDO2 pins right from the sketch. This is the step forward (I think) to being able to run multiple radios. 
+I've add what I call cc11xxOptions, which gives you the ability to assign the Chip Select, GDO0, and GDO2 pins right from the sketch. This is the step forward (I think) to be able to run multiple radios. 
 
 Example:
   ```bash
@@ -45,6 +45,7 @@ Example:
 - Teensy 3.1/3.2
 - Teensy 3.5/3.6
 - Teensy LC
+- Adafruit Feather M0
 - Espressif ESP32
 
 
