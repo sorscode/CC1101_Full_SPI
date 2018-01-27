@@ -408,35 +408,27 @@ void CC1101::setPowerDownState()
  */
 boolean CC1101::sendData(CCPACKET packet)
 {
-  Serial.println("Test Point 1");
   byte marcState;
   bool res = false;
  
   // Declare to be in Tx state. This will avoid receiving packets whilst
   // transmitting
-  Serial.println("Test Point 2");
   rfState = RFSTATE_TX;
-  Serial.println("Test Point 3");
   // Enter RX state
   setRxState();
-  Serial.println("Test Point 4");
   // Check that the RX state has been entered
   while (((marcState = readStatusReg(CC1101_MARCSTATE)) & 0x1F) != 0x0D)
   {
     if (marcState == 0x11)        // RX_OVERFLOW
       flushRxFifo();              // flush receive queue
   }
-  Serial.println("Test Point 5");
   delayMicroseconds(500);
-  Serial.println("Test Point 6");
   // Set data length at the first position of the TX FIFO
   // writeReg(CC1101_TXFIFO,  packet.length);
   // Write data into the TX FIFO
   writeBurstReg(CC1101_TXFIFO, packet.data, packet.length);
-  Serial.println("Test Point 7");
   // CCA enabled: will enter TX state only if the channel is clear
   setTxState();
-  Serial.println("Test Point 8");
   // Check that TX state is being entered (state = RXTX_SETTLING)
   marcState = readStatusReg(CC1101_MARCSTATE) & 0x1F;
   if((marcState != 0x13) && (marcState != 0x14) && (marcState != 0x15))
@@ -449,26 +441,19 @@ boolean CC1101::sendData(CCPACKET packet)
     rfState = RFSTATE_RX;
     return false;
   }
-  Serial.println("Test Point 9");
   // Wait for the sync word to be transmitted
   wait_GDO0_high();
-  Serial.println("Test Point 10");
   // Wait until the end of the packet transmission
   wait_GDO0_low();
-  Serial.println("Test Point 11");
   // Check that the TX FIFO is empty
   if((readStatusReg(CC1101_TXBYTES) & 0x7F) == 0)
     res = true;
-  Serial.println("Test Point 12");
   setIdleState();       // Enter IDLE state
   flushTxFifo();        // Flush Tx FIFO
-  Serial.println("Test Point 13");
   // Enter back into RX state
   setRxState();
-  Serial.println("Test Point 14");
   // Declare to be in Rx state
   rfState = RFSTATE_RX;
-  Serial.println("Test Point 15");
   return res;
 }
 
