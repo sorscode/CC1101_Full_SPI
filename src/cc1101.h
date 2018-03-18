@@ -232,6 +232,16 @@ enum RFSTATE
 #define CC1101_DEFVAL_TEST1      0x31        // Various Test Settings
 #define CC1101_DEFVAL_TEST0      0x0B        // Various Test Settings
 
+// Bit masks corresponding to STATE[2:0] in the status byte returned on MISO
+#define CC1101_STATE_BM                 0x70
+#define CC1101_FIFO_BYTES_AVAILABLE_BM  0x0F
+#define CC1101_STATE_TX_BM              0x20
+#define CC1101_STATE_TX_UNDERFLOW_BM    0x70
+#define CC1101_STATE_RX_BM              0x10
+#define CC1101_STATE_RX_OVERFLOW_BM     0x60
+#define CC1101_STATE_IDLE_BM            0x00
+
+
 /**
  * Macros
  */
@@ -296,12 +306,24 @@ class CC1101
     * 
     * Ability to configure CS/GDO0/GDO2 pins
     */	
-	struct cc11xxOptions
-	{
+	struct cc11xxOptions {
 		int8_t CS_pin;
 		int8_t GDO0_pin;
 		int8_t GDO2_pin;
 	};
+	struct PACKET_DATA {
+		uint16_t rxPosition;
+		uint16_t rxBytesLeft;
+		byte *pRxBuffer;
+		bool pktReceived;
+		bool lengthByteRead;
+	};
+	/**
+	* Attempting Larger Packets
+	* Added 3/16/2018
+	*/
+	PACKET_DATA pktData;
+	void pktDataInit(void);
 
   public:
     /*
@@ -476,6 +498,16 @@ class CC1101
      * 	Amount of bytes received
      */
     byte receiveData(CCPACKET *packet);
+	
+    /**
+     * rxData
+     * 
+     * Read data packet from RX FIFO
+     * Added on 3/16/2018
+     * Return:
+     * 	Amount of bytes received
+     */
+    byte rxData(CCPACKET *packet);	
 };
 
 #endif

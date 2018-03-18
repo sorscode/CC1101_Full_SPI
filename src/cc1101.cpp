@@ -279,6 +279,7 @@ void CC1101::setDefaultRegs(void)
 void CC1101::init(void) 
 {
 	reset();
+	pktDataInit();
  
   writeReg(CC1101_PATABLE, paTableByte);
 }
@@ -511,3 +512,74 @@ byte CC1101::receiveData(CCPACKET * packet)
 
   return packet->length;
 }
+
+byte cc1101RxBuffer[100];
+
+void CC1101::pktDataInit(void) {
+	// Setup pointers to tx and rx buffer
+    pktData.pRxBuffer = cc1101RxBuffer;
+    pktData.pktReceived = false;
+    pktData.rxBytesLeft = 0;
+	pktData.lengthByteRead = false;
+}
+
+/**
+ * rxData
+ * 
+ * Read data packet from RX FIFO
+ *
+ * 'packet'	Container for the packet received
+ * 
+ * Return:
+ * 	Amount of bytes received
+ */
+byte CC1101::rxData(CCPACKET * packet) {
+	byte rxStatus, dataInFifo;
+	uint16_t bytesInFifo;
+	// Get current state of the RX FIFO and Radio
+	// rxStatus = readConfigReg(CC1101_SNOP);
+	
+	// Flush out the RX FIFO if in OverFlow state
+    if (getMarcstate() == 0x11) {
+		setIdleState(); // Enter IDLE State
+		flushRxFifo();	// Flush Rx FIFO
+		packet->length = 0;
+	}
+	else {
+		rxStatus = readStatusReg(CC1101_RXFIFO); // Read the RX FIFO
+
+		 // If there's anything in the RX FIFO....
+		if (bytesInFifo = rxStatus & CC1101_FIFO_BYTES_AVAILABLE_BM) {
+			// Start by getting the packet length
+			if ((pktData.lengthByteRead == false) && (bytesInFifo != 1)) {
+				dataInFifo = readStatusReg(CC1101_RXFIFO); // Read the RX FIFO
+				pktData.pRxBuffer[0] = dataInFifo;
+				pktData.rxBytesLeft = pktData.pRxBuffer[0] + 2; // Packet Length + 2 status bytes
+				bytesInFifo--;
+				pktData.rxPosition = 1;
+				pktData.lengthByteRead = true;
+			}
+			// Make sure that the RX FIFO will not be emptied (See the CC1100 Errata Note)
+			if ((bytesInFifo) && (bytesInFifo != pktData.rxBytesLeft))
+				bytesInFifo--;
+			
+			// Update how many bytes are left to be received
+			pktData.rxBytesLeft -= bytesInFifo;
+			
+			// Read from RX FIFO and store the data in rxBuffer
+			while (bytesInFifo--) {
+				dataInFifo = readStatusReg(CC1101_RXFIFO); // Read the RX FIFO
+				pktData.pRxBuffer[pktData.rxPosition++] = dataInFifo;
+			}
+			// Done ?
+			if ((!pktData.rxBytesLeft) && (pktData.lengthByteRead)) {
+				pktData.pktReceived = true;
+				pktData.lengthByteRead = false;
+				byte i = 5;
+				byte *src = pktData.pRxBuffer;
+				byte *dst = packet->largeData;
+				while(i--) *dst++ = *src++;
+			}
+		}
+	}
+  }

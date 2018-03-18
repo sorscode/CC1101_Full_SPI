@@ -32,6 +32,8 @@
  */
 #define CC1101_BUFFER_LEN        64
 #define CC1101_DATA_LEN          CC1101_BUFFER_LEN - 3
+#define CC1101_LARGE_DATA		 100
+
 
 /**
  * Class: CCPACKET
@@ -42,6 +44,7 @@
 class CCPACKET
 {
   public:
+  
     /**
      * Data length
      */
@@ -51,6 +54,7 @@ class CCPACKET
      * Data buffer
      */
     byte data[CC1101_DATA_LEN];
+	byte largeData[CC1101_LARGE_DATA];
 
     /**
      * CRC OK flag
