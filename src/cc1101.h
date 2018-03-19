@@ -34,25 +34,22 @@
 /**
  * Carrier frequencies
  */
-enum CFREQ
-{
-  CFREQ_868 = 0,
-  CFREQ_433,
-  CFREQ_315,
-  CFREQ_915,
-  CFREQ_LAST
+enum CFREQ {
+	CFREQ_868 = 0,
+	CFREQ_433,
+	CFREQ_315,
+	CFREQ_915,
+	CFREQ_LAST
 };
 
 /**
  * RF STATES
  */
-enum RFSTATE
-{
-  RFSTATE_IDLE = 0,
-  RFSTATE_RX,
-  RFSTATE_TX
+enum RFSTATE {
+	RFSTATE_IDLE = 0,
+	RFSTATE_RX,
+	RFSTATE_TX
 };
-
 
 /**
  * Frequency channels
@@ -279,38 +276,54 @@ enum RFSTATE
  * Description:
  * CC1101 interface
  */
-class CC1101
-{
+class CC1101 {
   private:
 
-    /**
+	/**
      * readBurstReg
      * 
      * Read burst data from CC1101 via SPI
      * 
-     * 'buffer'	Buffer where to copy the result to
+     * 'buffer'		Buffer where to copy the result to
      * 'regAddr'	Register address
-     * 'len'	Data length
+     * 'len'		Data length
      */
-    void readBurstReg(byte * buffer, byte regAddr, byte len);
+	void readBurstReg(byte * buffer, byte regAddr, byte len);
 
     /**
      * setDefaultRegs
      * 
      * Configure CC1101 registers
      */
-    void setDefaultRegs(void);
+	void setDefaultRegs(void);
 	
-   /**
-    * cc11xxOptions
-    * 
-    * Ability to configure CS/GDO0/GDO2 pins
-    */	
+	/**
+	 * cc11xxOptions
+	 * Ability to configure CS/GDO0/GDO2 pins
+	 *
+     * CS_pin	-> Configure what pin will be for Chip Select
+	 * GDO0_pin -> Configure what pin will be GDO0 Interrupt Pin
+	 * GDO2_pin -> Configure what pin will be GDO2 Interrupt Pin
+	 *
+     */	
 	struct cc11xxOptions {
 		int8_t CS_pin;
 		int8_t GDO0_pin;
 		int8_t GDO2_pin;
 	};
+	
+	/**
+	 * PACKET_DATA
+	 * Added 3/16/2018
+     * Attempting to be able to receive packets >64 bytes
+	 * 
+	 * rxPosition		-> Used to store what position in the array data has been placed
+	 * rxBytesLeft		-> Used to determine how many more bytes to receive
+	 * pRxBuffer		-> Used as a Buffer to store the packet
+	 * pktReceived		-> Used to determine if a packet has been received
+	 * lengthByteRead	-> Used to determine if the Length Bytes has been read
+	 *
+     */		
 	struct PACKET_DATA {
 		uint16_t rxPosition;
 		uint16_t rxBytesLeft;
@@ -319,22 +332,31 @@ class CC1101
 		bool lengthByteRead;
 	};
 	/**
-	* Attempting Larger Packets
-	* Added 3/16/2018
-	*/
+	 * PACKET_DATA pktData -> Define the struct
+	 * Attempting to be able to receive packets >64 bytes
+	 * Added 3/16/2018
+	 * 
+	 */
 	PACKET_DATA pktData;
+
+	/**
+	 * pktDataInit -> Initialize the struct
+	 * Attempting to be able to receive packets >64 bytes
+	 * Added 3/16/2018
+	 * 
+	 */	
 	void pktDataInit(void);
 
   public:
-    /*
+	/*
      * RF state
      */
-    byte rfState;
+	byte rfState;
 
     /**
      * Tx Power byte (single PATABLE config)
      */
-    byte paTableByte;
+	byte paTableByte;
 
     /**
      * Carrier frequency
